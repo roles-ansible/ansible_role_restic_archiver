@@ -1,8 +1,7 @@
  ansible_role_restic_archiver
 ======================
 
-> **Beta:** This role is in beta status.
-
+## **ATTENTION** This role is under developement
 <!--
 
 ![🎭 Tests](https://github.com/arillso/ansible.restic/workflows/%F0%9F%8E%AD%20Tests/badge.svg)
