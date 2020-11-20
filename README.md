@@ -13,10 +13,15 @@
 
 
 
-## Description
+ Description
+----------------
 [Restic](https://github.com/restic/restic) is a versatile Go based backup
 solution which supports multiple backends, deduplication and incremental
 backups.
+
+This role is **only intended to clean up a restick backup**. So for example to keep only backups of the last 7 days and monthly backups. And if necessary to copy the backups again to an external storage.
+
+----------------------
 
 This role installs restic on a client, configures the backup repositories
 and optionally sets up cronjobs to run said backups.

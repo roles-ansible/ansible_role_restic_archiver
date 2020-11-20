@@ -39,12 +39,13 @@
 
 - name: Setup CRON jobs
   cron:
-    name: 'arillso.restic backup {{ item.name }}'
+    name: 'do1jlr.restic_archiver {{ item.name }}'
     job: 'CRON=true {{ restic_script_dir }}/backup-{{ item.name }}.sh'
     minute: '{{ item.schedule_minute | default("*") }}'
     hour: '{{ item.schedule_hour | default("*") }}'
     weekday: '{{ item.schedule_weekday | default("*") }}'
     month: '{{ item.schedule_month | default("*") }}'
+    cron_file: '/etc/crontab'
     state: present
   become: true
   no_log: true
