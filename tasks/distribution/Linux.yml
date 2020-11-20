@@ -3,9 +3,9 @@
 
 - name: reformat dict if necessary
   set_fact:
-    restic_backups: "{{ restic_backups|dict2items|json_query('[*].value') }}"
+    restic_archiver__backups: "{{ restic_archiver__backups|dict2items|json_query('[*].value') }}"
   when:
-    - restic_backups | type_debug == "dict"
+    - restic_archiver__backups | type_debug == "dict"
 
 - name: Create backup credentials
   template:
@@ -15,7 +15,7 @@
     owner: '{{ restic_dir_owner }}'
     group: '{{ restic_dir_group }}'
   no_log: true
-  with_items: '{{ restic_backups }}'
+  with_items: '{{ restic_archiver__backups }}'
   when:
     - item.name is defined
     - item.src is defined or item.stdin is defined
@@ -30,7 +30,7 @@
     owner: '{{ restic_dir_owner }}'
     group: '{{ restic_dir_group }}'
   no_log: true
-  with_items: '{{ restic_backups }}'
+  with_items: '{{ restic_archiver__backups }}'
   when:
     - item.name is defined
     - item.src is defined or item.stdin is defined
@@ -49,7 +49,7 @@
     state: present
   become: true
   no_log: true
-  with_items: '{{ restic_backups }}'
+  with_items: '{{ restic_archiver__backups }}'
   when:
     - restic_create_cron
     - item.name is defined

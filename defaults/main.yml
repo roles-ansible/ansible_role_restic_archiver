@@ -6,7 +6,7 @@ restic_download_path: '/opt/restic'
 restic_install_path: '/usr/bin'
 restic_script_dir: '~/restic'
 restic_repos: {}
-restic_backups: []
+restic_archiver__backups: []
 restic_create_cron: false
 
 restic_dir_owner: '{{ ansible_user | default(ansible_user_id) }}'

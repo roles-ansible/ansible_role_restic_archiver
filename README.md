@@ -81,7 +81,7 @@ ansible-galaxy install arillso.restic
 | `restic_install_path`  | `'/usr/local/bin'`   | Install location for the restic binary                                      |
 | `restic_script_dir`    | `'~/restic'`         | Location of the generated backup scripts                                    |
 | `restic_repos`         | `{}`                 | A dictionary of repositories where snapshots are stored                     |
-| `restic_backups`       | `{}` (or `[]`)       | A list of dictionaries specifying the files and directories to be backed up |
+| `restic_archiver__backups`       | `{}` (or `[]`)       | A list of dictionaries specifying the files and directories to be backed up |
 | `restic_create_cron`   | `false`              | Should a cronjob be created for each backup                                 |
 | `restic_dir_owner`     | `'{{ansible_user}}'` | The owner of all created dirs                                               |
 | `restic_dir_group`     | `'{{ansible_user}}'` | The group of all created dirs                                               |
@@ -156,7 +156,7 @@ Available variables:
 
 Example:
 ```yaml
-restic_backups:
+restic_archiver__backups:
   data:
     name: data
     repo: remove
@@ -165,7 +165,7 @@ restic_backups:
     schedule_hour: 3
 ```
 
-> You can also specify restic_backups as an array, which is a legacy feature and
+> You can also specify restic_archiver__backups as an array, which is a legacy feature and
 > might be deprecated in the future. currently, the name key is used for
 > namint the access and backup files
 
