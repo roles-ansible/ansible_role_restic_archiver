@@ -1,5 +1,6 @@
 ---
-# tasks file for skeleton
+- include_tasks: versioncheck.yml
+  when: submodules_versioncheck|bool
 
 - name: add OS specific variables
   include_vars: '{{ loop_vars }}'

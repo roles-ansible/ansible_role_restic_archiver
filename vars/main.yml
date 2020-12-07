@@ -10,3 +10,7 @@ _platform_map:
 restic_create_paths:
   - '{{ restic_download_path }}/bin'
   - '{{ restic_script_dir }}'
+
+  ---
+playbook_version_number: 20 # should be over ninethousand
+playbook_version_path: 'role-restic_archiver_roles-ansible_github.com.version'
