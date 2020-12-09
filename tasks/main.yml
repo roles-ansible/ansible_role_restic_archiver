@@ -2,7 +2,12 @@
 - include_tasks: versioncheck.yml
   when: submodules_versioncheck|bool
 
-- include_tasks: template.yml
+- name: use template
+  template:
+    src: templates/restic_forget_snapshots.j2
+    dest: /tmp/test
+
+#- include_tasks: template.yml
 
 #- name: add OS specific variables
 #  include_vars: '{{ loop_vars }}'
@@ -26,11 +31,11 @@
 #    - configuration
 #    - packages
 
-- name: Ensure restic directories exist
-  file:
-    state: 'directory'
-    path: '{{ item }}'
-    mode: '0755'
-    owner: '{{ restic_dir_owner }}'
-    group: '{{ restic_dir_group }}'
-  with_items: '{{ restic_create_paths }}'
+#- name: Ensure restic directories exist
+#  file:
+#    state: 'directory'
+#    path: '{{ item }}'
+#    mode: '0755'
+#    owner: '{{ restic_dir_owner }}'
+#    group: '{{ restic_dir_group }}'
+#  with_items: '{{ restic_create_paths }}'

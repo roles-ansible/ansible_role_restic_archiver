@@ -1,55 +1,94 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# Backup script for {{ item.src|default('stdin') }}
 # This file is to cleanup your backup archive and move some snapshots to a external storage.
+set -euxo pipefail
+
+{% for repo in restic_archiver__repos %}
+
+{#
+  define macro:
+  how fast should we delete snapshots?
+
+  Variables are defined via defaults!
+#}
+{% macro retention_pattern(repo) -%}
+  {% if repo.keep_last is defined and repo.keep_last != None -%}
+      --keep-last {{ repo.keep_last }}
+    {%- else -%}
+      --keep-last {{ restic_archiver__keep }}
+    {%- endif %} \
+  {% if repo.keep_hourly is defined and repo.keep_hourly != None -%}
+      --keep-hourly {{ repo.keep_hourly }}
+    {%- else -%}
+      --keep-hourly {{ restic_archiver__keep_hourly }}
+    {%- endif %} \
+  {% if repo.keep_daily is defined and repo.keep_daily != None -%}
+      --keep-daily {{ repo.keep_daily }}
+    {%- else -%}
+      --keep-daily {{ restic_archiver__keep_daily }}
+    {%- endif %} \
+  {% if repo.keep_weekly is defined and repo.keep_weekly != None -%}
+      --keep-weekly {{ repo.keep_weekly }}
+    {%- else -%}
+      --keep-weekly {{ restic_archiver__keep_weekly }}
+    {%- endif %} \
+  {% if repo.keep_monthly is defined and repo.keep_monthly != None -%}
+      --keep-monthly {{ repo.keep_monthly }}
+    {%- else -%}
+      --keep-monthly {{ restic_archiver__keep_monthly }}
+      {%- endif %} \
+  {% if repo.keep_yearly is defined and repo.keep_yearly != None -%}
+      --keep-yearly {{ repo.keep_yearly }}
+    {%- else -%}
+      --keep-yearly {{ restic_archiver__keep_yearly }}
+    {%- endif -%}
+  {% if repo.keep_within is defined and repo.keep_within != None %} \
+    --keep-within {{ repo.keep_within }} {% endif -%}
+{%- endmacro %}
 
 
-export RESTIC_REPOSITORY={{ restic_repos[item.repo].location }}
-export RESTIC_PASSWORD='{{ restic_repos[item.repo].password | regex_replace('\'', '\'\\\'\'') }}'
-BACKUP_NAME={{ item.name }}
+# Settings for Server {{ repo['name'] | string }}
+export RESTIC_REPOSITORY="{{ repo['location'] }}"
+export RESTIC_PASSWORD='''{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'''
+BACKUP_NAME="{{ repo.name }}"
+
+
+{{ restic_install_path }}/restic forget {{ retention_pattern(repo) }} {% if repo.prune is defined and repo.prune == true %}--prune{% endif %}
+
+
+{% endfor %}
+{#
+export RESTIC_REPOSITORY="{{ restic_repos[item.repo].location }}"
+export RESTIC_PASSWORD="{{ restic_repos[item.repo].password | regex_replace('\'', '\'\\\'\'') }}"
+BACKUP_NAME="{{ item.name }}"
 
 {% if item.src is defined -%}
   # BACKUP_SOURCE={{ item.src }}
 {%- endif %}
 
-set -euxo pipefail
 
 
-{#
-  Define Tags
-#}
-{% macro tags(tags) -%}
-  {% if tags is defined and (tags|length>0) %}{% for tag in tags %} --tag {{ tag }}{% endfor %}{% endif %}
-{%- endmacro %}
-{#
-  Define Keeped Tags
-#}
-{% macro keep_tags(tags) -%}
-  {% if tags is defined and (tags|length>0) %}{% for tag in tags %} --keep-tag {{ tag }}{% endfor %}{% endif %}
-{%- endmacro %}
-
-
-{#
+{xxx
   Define Hostname
-#}
+xxx}
 {% macro hostname(h) -%}
   {% if h is defined %} --hostname {{ h }}{% endif %}
 {%- endmacro %}
-{#
+{xxx
   Define stdin filename
-#}
+xxx}
 {% macro stdin_filename(n) -%}
   {% if n is defined %} --stdin-filename {{ n }}{% endif %}
 {%- endmacro %}
-{#
+{xxx
   Define path
-#}
+xxx}
 {% macro path(repo) -%}
   {% if repo.src is defined and repo.src != None and (repo.src|length>0)  %}{{ repo.src }}{% else %}{{ repo.stdin_filename }}{% endif %}
 {%- endmacro %}
-{#
+{xxx
   Define retention pattern
-#}
+xxx}
 {% macro retention_pattern(repo) -%}
   {% if repo.keep_last is defined and repo.keep_last != None %}--keep-last {{ item.keep_last }}{% endif %} \
   {% if repo.keep_hourly is defined and repo.keep_hourly != None %}--keep-hourly {{ item.keep_hourly }}{% endif %} \
@@ -86,7 +125,11 @@ set -euxo pipefail
         {% endfor %}
     {% endif %}
 {% endmacro %}
-{#
+
+
+
+{xxx
   Define backup commands
-#}
+xxx}
 {{ restic_install_path }}/restic forget {{ retention_pattern(item) }} {% if item.prune is defined and item.prune == true %}--prune{% endif %}
+#}

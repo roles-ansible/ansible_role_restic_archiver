@@ -1,4 +1,20 @@
 ---
+# which repos should we cleanup by default
+restic_archiver__repos: {}
+#  example_server:
+#    location: /srv/restic/example_server_repo
+#    password: securepassword4eXaMpleSserver
+
+# how long should we store all backups by default
+restic_archiver__keep: 9
+restic_archiver__keep_hourly: 28
+restic_archiver__keep_daily: 26
+restic_archiver__keep_weekly: 8
+restic_archiver__keep_monthly: 13
+restic_archiver__keep_yearly: 12
+
+
+
 # defaults file for skeleton
 restic_install_path: '/usr/bin'
 restic_script_dir: '~/restic'
@@ -10,4 +26,4 @@ restic_dir_owner: '{{ ansible_user | default(ansible_user_id) }}'
 restic_dir_group: '{{ ansible_user | default(ansible_user_id) }}'
 
 # version check for this playbook
-submodules_versioncheck: true
+submodules_versioncheck: false
