@@ -1,0 +1,54 @@
+---
+- name: reformat dict if necessary
+  set_fact:
+    restic_archiver__backups: "{{ restic_archiver__backups|dict2items|json_query('[*].value') }}"
+  when:
+    - restic_archiver__backups | type_debug == "dict"
+
+- name: Create backup credentials
+  template:
+    src: restic_access_Linux.j2
+    dest: '{{ restic_script_dir }}/access-{{ item.name }}.sh'
+    mode: '0700'
+    owner: '{{ restic_dir_owner }}'
+    group: '{{ restic_dir_group }}'
+  no_log: true
+  with_items: '{{ restic_archiver__backups }}'
+  when:
+    - item.name is defined
+    - item.src is defined or item.stdin is defined
+    - item.src is defined or item.stdin and item.stdin_cmd is defined
+    - item.repo in restic_repos
+
+- name: Create backup script
+  template:
+    src: restic_script_Linux.j2
+    dest: '{{ restic_script_dir }}/backup-{{ item.name }}.sh'
+    mode: '0700'
+    owner: '{{ restic_dir_owner }}'
+    group: '{{ restic_dir_group }}'
+  no_log: true
+  with_items: '{{ restic_archiver__backups }}'
+  when:
+    - item.name is defined
+    - item.src is defined or item.stdin is defined
+    - item.src is defined or item.stdin and item.stdin_cmd is defined
+    - item.repo in restic_repos
+
+- name: Setup CRON jobs
+  cron:
+    name: 'do1jlr.restic_archiver {{ item.name }}'
+    job: 'CRON=true {{ restic_script_dir }}/backup-{{ item.name }}.sh'
+    minute: '{{ item.schedule_minute | default("*") }}'
+    hour: '{{ item.schedule_hour | default("*") }}'
+    weekday: '{{ item.schedule_weekday | default("*") }}'
+    month: '{{ item.schedule_month | default("*") }}'
+    cron_file: '/etc/crontab'
+    state: present
+  become: true
+  no_log: true
+  with_items: '{{ restic_archiver__backups }}'
+  when:
+    - restic_create_cron
+    - item.name is defined
+    - item.scheduled | default(false)
