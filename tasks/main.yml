@@ -8,6 +8,7 @@
     dest: /tmp/test
     group: "{{ restic_archiver__dir_owner }}"
     owner: "{{ restic_archiver__dir_group }}"
+  no_log: true
 
 
 #- include_tasks: template.yml
