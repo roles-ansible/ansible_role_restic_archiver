@@ -1,9 +1,19 @@
 ---
 # which repos should we cleanup by default
 restic_archiver__repos: {}
-#  example_server:
+#  - name: example_server:
 #    location: /srv/restic/example_server_repo
 #    password: securepassword4eXaMpleSserver
+#  - name: other_server
+#    location: /srv/restic/other_server_repo
+#    password: xtrasecuredifferentpassword4other
+#    keep_last: 5
+#    keep_hourly: 4
+#    keep_daily: 1
+#    keep_weekly: 1
+#    keep_monthly: 1
+#    keep_yearly: 1
+#    keep_within: 1
 
 # how long should we store all backups by default
 restic_archiver__keep: 9
@@ -22,8 +32,8 @@ restic_repos: {}
 restic_archiver__backups: []
 restic_create_cron: false
 
-restic_dir_owner: '{{ ansible_user | default(ansible_user_id) }}'
-restic_dir_group: '{{ ansible_user | default(ansible_user_id) }}'
+restic_archiver__dir_owner: '{{ ansible_user | default(ansible_user_id) }}'
+restic_archiver__dir_group: '{{ ansible_user | default(ansible_user_id) }}'
 
 # version check for this playbook
 submodules_versioncheck: false

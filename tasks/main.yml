@@ -6,6 +6,9 @@
   template:
     src: templates/restic_forget_snapshots.j2
     dest: /tmp/test
+    group: "{{ restic_archiver__dir_owner }}"
+    owner: "{{ restic_archiver__dir_group }}"
+
 
 #- include_tasks: template.yml
 
