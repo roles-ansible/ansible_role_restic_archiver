@@ -7,6 +7,10 @@ restic_archiver__repos: {}
 #  - name: other_server
 #    location: /srv/restic/other_server_repo
 #    password: xtrasecuredifferentpassword4other
+#    archive: true
+#    archive_location: /mnt/archive/other_server_repo
+#    archive_password: archive4other_server_password
+#    archive_cleanup: true
 #    keep_last: 5
 #    keep_hourly: 4
 #    keep_daily: 1

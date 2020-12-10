@@ -44,16 +44,53 @@ set -euxo pipefail
     {%- endif -%}
   {% if repo.keep_within is defined and repo.keep_within != None %} \
     --keep-within {{ repo.keep_within }} {% endif -%}
+  {%- if repo.prune|default(false) %} \
+  --prune {% endif %}
 {%- endmacro %}
 
 
 # Settings for Server {{ repo['name'] | string }}
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
-export RESTIC_PASSWORD='''{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'''
+export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
 BACKUP_NAME="{{ repo.name }}"
 
+{{ restic_install_path }}/restic forget {{ retention_pattern(repo) }}
 
-{{ restic_install_path }}/restic forget {{ retention_pattern(repo) }} {% if repo.prune is defined and repo.prune == true %}--prune{% endif %}
+
+{% if repo.archive|default(false) %}
+# ARCHIVE Settings for Server "{{ repo['name'] | string }}"
+export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
+export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
+export RESTIC_REPOSITORY2="{{ repo['location'] }}"
+export RESTIC_PASSWORD2='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
+BACKUP_NAME="{{ repo.name }}_archive"
+
+# init repo if it does not exist
+if ([ -z "$(restic cat config)" ]) 2>/dev/null; then
+  restic init --copy-chunker-params
+fi
+
+# ARCHIVE Settings for Server "{{ repo['name'] | string }}"
+export RESTIC_REPOSITORY2="{{ repo['archive_location'] }}"
+export RESTIC_PASSWORD2='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
+export RESTIC_REPOSITORY="{{ repo['location'] }}"
+export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
+
+# transfer snapshots to archive
+restic copy
+
+{% if repo.archive_cleanup | default(false) %}
+
+
+
+{{ restic_install_path }}/restic copy --copy-chunker-params 
+
+{% endif %}
+
+
+{% endif %}
 
 
 {% endfor %}
+
+

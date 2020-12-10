@@ -9,7 +9,7 @@
     group: "{{ restic_archiver__dir_owner }}"
     owner: "{{ restic_archiver__dir_group }}"
     mode: 0700
-  no_log: true
+#  no_log: true
 
 
 #- include_tasks: template.yml
