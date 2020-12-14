@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# This file is to cleanup your backup archive and move some snapshots to a external storage.
+echo "Summary for Restic Backup"
+
+{% for repo in restic_archiver__repos %}
+
+# Settings for Server {{ repo['name'] | string }}
+export RESTIC_REPOSITORY="{{ repo['location'] }}"
+export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
+BACKUP_NAME="{{ repo.name }}"
+echo "BACKUP: {{ repo.name }}"
+restic check
+restic stats
+
+{% if repo.archive|default(false) %}
+
+{% if restic_archiver__mount_required %}
+set +euxo pipefail
+if mountpoint -q {{ restic_archiver__mount_disk }}
+then
+   echo "{{ restic_archiver__mount_disk }} is mounted"
+else
+   mount -a
+fi
+set -euxo pipefail
+{% endif %}
+
+# ARCHIVE Settings for Server "{{ repo['name'] | string }}"
+echo "EXTERNAL_BACKUP: {{ repo.name }}"
+export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
+export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
+BACKUP_NAME="{{ repo.name }}_archive"
+
+restic check
+restic stats
+{% endif %}
+
+{% endfor %}
+sync
+set +euxo pipefail
+df -h
+{% if restic_archiver__umount_after_usage %}
+umount {{ restic_archiver__mount_disk }}
+{% endif %}

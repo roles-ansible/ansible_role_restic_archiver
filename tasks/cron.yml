@@ -26,3 +26,4 @@
     minute: "{{ restic_archiver__minute }}"
     user: "{{ restic_archiver__owner }}"
   when: not restic_archiver__log_output
+

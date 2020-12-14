@@ -15,3 +15,6 @@
   when: restic_archiver__log_output | bool
 
 - include_tasks: cron.yml
+
+- include_tasks: mail.yml
+  when: restic_archiver__mailsummary | bool

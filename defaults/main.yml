@@ -49,5 +49,8 @@ restic_archiver__package:
 restic_archiver__log_output: true
 restic_archiver__logrotate: true
 
+restic_archiver__mailsummary: false
+restic_archiver__mailaddress: false
+
 # version check for this playbook (true is recomended)
 submodules_versioncheck: false
