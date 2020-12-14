@@ -48,16 +48,20 @@ set -euxo pipefail
   --prune {% endif %}
 {%- endmacro %}
 
-{% macro validate_mounts %}
-{% if restic_archiver__mount_required | bool %}
+{% if restic_archiver__mount_required %}
+{% raw %}
 if mountpoint -q {{ restic_archiver__mount_disk }}
 then
    echo "{{ restic_archiver__mount_disk }} is mounted"
 else
    mount -a
 fi
-{% endif %}
+{% endraw %}
+{% else %}
+{% macro validate_mounts() %}
+# be excellent to each other!
 {% endmacro %}
+{% endif %}
 
 # Settings for Server {{ repo['name'] | string }}
 {{ validate_mounts }}
@@ -112,4 +116,4 @@ restic check
 sync
 {% if restic_archiver__umount_after_usage %}
 umount restic_archiver__mount_disk
-{% restic_archiver__mount_disk %}
+{% endif %}
