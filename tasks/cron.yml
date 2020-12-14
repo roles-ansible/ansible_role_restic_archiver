@@ -1,0 +1,28 @@
+---
+- name: install cron
+  become: true
+  package:
+    name: "{{ restic_archiver__package }}"
+    state: present
+
+- name: setup cronjob for restic with logging
+  become: true
+  cron:
+    name: "archive restic backup with ansible_role_restic_archiver  >> /var/log/restic/restic_archiver.log"
+    job: /opt/restic-backup.sh
+    cron_file: /etc/crontab
+    hour: "{{ restic_archiver__hour }}"
+    minute: "{{ restic_archiver__minute }}"
+    user: "{{ restic_archiver__owner }}"
+  when: restic_archiver__log_output
+
+- name: setup cronjob for restic without logging
+  become: true
+  cron:
+    name: "archive restic backup with ansible_role_restic_archiver"
+    job: /opt/restic-backup.sh
+    cron_file: /etc/crontab
+    hour: "{{ restic_archiver__hour }}"
+    minute: "{{ restic_archiver__minute }}"
+    user: "{{ restic_archiver__owner }}"
+  when: not restic_archiver__log_output

@@ -67,6 +67,9 @@ restic_archiver__umount_after_usage: false
 restic_archiver__package:
   - cron
 
+restic_archiver__log_output: true
+restic_archiver__logrotate: true
+
 # version check for this playbook (true is recomended)
 submodules_versioncheck: false
 ```

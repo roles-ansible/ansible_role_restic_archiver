@@ -1,0 +1,27 @@
+---
+- name: create /var/log/restic/
+  become: true
+  file:
+    path: /var/log/restic
+    state: directory
+    recurse: true
+    group: "{{ restic_archiver__owner }}"
+    owner: "{{ restic_archiver__group }}"
+    mode: 0750
+
+- name: install logrotate
+  become: true
+  package:
+    name: logrotate
+    state: present
+  when: restic_archiver__logrotate | bool
+
+- name: create logrotate config
+  become: true
+  copy:
+    src: files/logrotate.conf
+    dest: /etc/logrotate.d/restic
+    group: "{{ restic_archiver__owner }}"
+    owner: "{{ restic_archiver__group }}"
+    mode: 0644
+  when: restic_archiver__logrotate | bool
