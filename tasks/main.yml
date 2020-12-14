@@ -16,7 +16,7 @@
   cron:
     name: "archive restic backup with ansible_role_restic_archiver"
     job: /opt/restic-backup.sh
-    cron_file: /tec/crontab
+    cron_file: /etc/crontab
     hour: "{{ restic_archiver__hour }}"
     minute: "{{ restic_archiver__minute }}"
-    user: "{{ restic_archiver__user }}"
+    user: "{{ restic_archiver__owner }}"
