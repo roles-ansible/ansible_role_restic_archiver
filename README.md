@@ -1,14 +1,58 @@
  ansible_role_restic_archiver
 ======================
 
-## **ATTENTION** This role is under developement
-<!--
+ansible role to "archive" restic backups.
 
-![🎭 Tests](https://github.com/arillso/ansible.restic/workflows/%F0%9F%8E%AD%20Tests/badge.svg)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=popout-square)](https://sbaerlo.ch/licence)
-[![Ansible Galaxy](https://img.shields.io/badge/ansible- -galaxy-restic-blue.svg?style=popout-square)](https://galaxy.ansible.com/arillso/restic)
-[![Ansible Role](https://img.shields.io/ansible/role/d/42773.svg?style=popout-square)](https://galaxy.ansible.com/arillso/restic)
+The scenario for this role is:
+- You have the restic rest server running in write-only mode
+- you send backups from other servers to your restic backup server
 
--->
+Now you don't want to store all backups indefinitely, but only for the last days a daily backup and otherwise weekly, monthly, yearly a few... just like you do it.
 
+Of course you don't want to give access to others, so you solve the whole thing with a local cronjob. And this cronjob is built with this Ansible role.
+
+As a bonus feature, you can optionally transfer the backups to another disk (even with a different password). Which is also a very charming backup concept from a security point of view.
+
+ Variables:
+---------
+```ini
+# which repos should we 'cleanup' by default
+restic_archiver__repos: {}
+#  - name: example_server:
+#    location: /srv/restic/example_server_repo
+#    password: securepassword4eXaMpleSserver
+#  - name: other_server
+#    location: /srv/restic/other_server_repo
+#    password: xtrasecuredifferentpassword4other
+#    archive: true
+#    archive_location: /mnt/archive/other_server_repo
+#    archive_password: archive4other_server_password
+#    archive_cleanup: true
+#    keep_last: 5
+#    keep_hourly: 4
+#    keep_daily: 1
+#    keep_weekly: 1
+#    keep_monthly: 1
+#    keep_yearly: 1
+#    keep_within: 1
+
+# how long should we store all backups by default
+restic_archiver__keep: 9
+restic_archiver__keep_hourly: 28
+restic_archiver__keep_daily: 26
+restic_archiver__keep_weekly: 8
+restic_archiver__keep_monthly: 13
+restic_archiver__keep_yearly: 12
+
+# owner and user of all restic stuff
+restic_archiver__owner: 'root'
+restic_archiver__group: 'root'
+
+# shedule restic cronjob
+restic_archiver__hour: '3'
+restic_archiver__minute: '32'
+
+# version check for this playbook (true is recomended)
+submodules_versioncheck: false
+```
 

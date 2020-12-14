@@ -27,17 +27,13 @@ restic_archiver__keep_weekly: 8
 restic_archiver__keep_monthly: 13
 restic_archiver__keep_yearly: 12
 
+# owner and user of all restic stuff
+restic_archiver__owner: 'root'
+restic_archiver__group: 'root'
 
+# shedule restic cronjob
+restic_archiver__hour: '3'
+restic_archiver__minute: '32'
 
-# defaults file for skeleton
-restic_install_path: '/usr/bin'
-restic_script_dir: '~/restic'
-restic_repos: {}
-restic_archiver__backups: []
-restic_create_cron: false
-
-restic_archiver__dir_owner: '{{ ansible_user | default(ansible_user_id) }}'
-restic_archiver__dir_group: '{{ ansible_user | default(ansible_user_id) }}'
-
-# version check for this playbook
+# version check for this playbook (true is recomended)
 submodules_versioncheck: false
