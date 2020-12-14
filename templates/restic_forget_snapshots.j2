@@ -48,14 +48,14 @@ set -euxo pipefail
   --prune {% endif %}
 {%- endmacro %}
 
-
 # Settings for Server {{ repo['name'] | string }}
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
 BACKUP_NAME="{{ repo.name }}"
 
-{{ restic_install_path }}/restic forget {{ retention_pattern(repo) }}
+restic forget {{ retention_pattern(repo) }}
 
+restic check
 
 {% if repo.archive|default(false) %}
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
@@ -79,18 +79,18 @@ export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}
 # transfer snapshots to archive
 restic copy
 
-{% if repo.archive_cleanup | default(false) %}
+{% if repo.archive_cleanup %}
 
+# ARCHIVE CLEANUP Settings for Server "{{ repo['name'] | string }}"
+export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
+export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
+BACKUP_NAME="{{ repo.name }}_archive"
 
-
-{{ restic_install_path }}/restic copy --copy-chunker-params 
+restic forget {{ retention_pattern(repo) }}
 
 {% endif %}
-
-
+restic check
 {% endif %}
-
 
 {% endfor %}
-
 
