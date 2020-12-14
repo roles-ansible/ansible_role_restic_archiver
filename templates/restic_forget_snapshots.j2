@@ -58,7 +58,7 @@ set -euxo pipefail
 
 # Settings for Server {{ repo['name'] | string }}
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
-export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
+export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}"
 
 restic forget {{ retention_pattern(repo) }}
@@ -68,9 +68,9 @@ restic check
 {% if repo.archive|default(false) %}
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
 export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
-export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
+export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 export RESTIC_REPOSITORY2="{{ repo['location'] }}"
-export RESTIC_PASSWORD2='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
+export RESTIC_PASSWORD2='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}_archive"
 
 # init repo if it does not exist
@@ -90,9 +90,9 @@ set -euxo pipefail
 {% endif %}
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
 export RESTIC_REPOSITORY2="{{ repo['archive_location'] }}"
-export RESTIC_PASSWORD2='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
+export RESTIC_PASSWORD2='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
-export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
+export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 
 # transfer snapshots to archive
 restic copy
@@ -111,7 +111,7 @@ set -euxo pipefail
 {% endif %}
 # ARCHIVE CLEANUP Settings for Server "{{ repo['name'] | string }}"
 export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
-export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
+export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}_archive"
 
 restic forget {{ retention_pattern(repo) }}

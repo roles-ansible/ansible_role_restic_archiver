@@ -6,39 +6,40 @@ echo "Summary for Restic Backup"
 {% for repo in restic_archiver__repos %}
 
 # Settings for Server {{ repo['name'] | string }}
-export RESTIC_REPOSITORY="{{ repo['location'] }}"
-export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
-BACKUP_NAME="{{ repo.name }}"
+export RESTIC_REPOSITORY="{{ repo['location'] }}" 2>/dev/null
+export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
+BACKUP_NAME="{{ repo.name }}" 2>/dev/null
 echo "BACKUP: {{ repo.name }}"
-restic check
-restic stats
+restic check 2>/dev/null
+restic stats 2>/dev/null
 
 {% if repo.archive|default(false) %}
 
 {% if restic_archiver__mount_required %}
-set +euxo pipefail
+set +euxo pipefail 2>/dev/null
 if mountpoint -q {{ restic_archiver__mount_disk }}
 then
    echo "{{ restic_archiver__mount_disk }} is mounted"
 else
-   mount -a
+   mount -a 2>/dev/null
 fi
-set -euxo pipefail
+set -euxo pipefail 2>/dev/null
 {% endif %}
 
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
 echo "EXTERNAL_BACKUP: {{ repo.name }}"
-export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
-export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
-BACKUP_NAME="{{ repo.name }}_archive"
+export RESTIC_REPOSITORY="{{ repo['archive_location'] }}" 2>/dev/null
+export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
+BACKUP_NAME="{{ repo.name }}_archive" 2>/dev/null
 
-restic check
-restic stats
+restic check 2>/dev/null
+restic statps
 {% endif %}
 
 {% endfor %}
 sync
 set +euxo pipefail
+echo "\n\n\n\n"
 df -h
 {% if restic_archiver__umount_after_usage %}
 umount {{ restic_archiver__mount_disk }}
