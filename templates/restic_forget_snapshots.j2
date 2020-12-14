@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
 # This file is to cleanup your backup archive and move some snapshots to a external storage.
-set -euxo pipefail
-
 {% for repo in restic_archiver__repos %}
 
 {#
@@ -56,6 +54,7 @@ else
    mount -a
 fi
 {% endif %}
+set -euxo pipefail
 
 # Settings for Server {{ repo['name'] | string }}
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
@@ -80,12 +79,14 @@ if ([ -z "$(restic cat config)" ]) 2>/dev/null; then
 fi
 
 {% if restic_archiver__mount_required %}
+set +euxo pipefail
 if mountpoint -q {{ restic_archiver__mount_disk }}
 then
    echo "{{ restic_archiver__mount_disk }} is mounted"
 else
    mount -a
 fi
+set -euxo pipefail
 {% endif %}
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
 export RESTIC_REPOSITORY2="{{ repo['archive_location'] }}"
@@ -99,12 +100,14 @@ restic copy
 {% if repo.archive_cleanup %}
 
 {% if restic_archiver__mount_required %}
+set +euxo pipefail
 if mountpoint -q {{ restic_archiver__mount_disk }}
 then
    echo "{{ restic_archiver__mount_disk }} is mounted"
 else
    mount -a
 fi
+set -euxo pipefail
 {% endif %}
 # ARCHIVE CLEANUP Settings for Server "{{ repo['name'] | string }}"
 export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
@@ -120,6 +123,7 @@ restic check
 {% endfor %}
 
 sync
+set +euxo pipefail
 {% if restic_archiver__umount_after_usage %}
 umount {{ restic_archiver__mount_disk }}
 {% endif %}
