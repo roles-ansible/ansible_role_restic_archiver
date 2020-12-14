@@ -48,7 +48,19 @@ set -euxo pipefail
   --prune {% endif %}
 {%- endmacro %}
 
+{% macro validate_mounts %}
+{% if restic_archiver__mount_required | bool %}
+if mountpoint -q {{ restic_archiver__mount_disk }}
+then
+   echo "{{ restic_archiver__mount_disk }} is mounted"
+else
+   mount -a
+fi
+{% endif %}
+{% endmacro %}
+
 # Settings for Server {{ repo['name'] | string }}
+{{ validate_mounts }}
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}'
 BACKUP_NAME="{{ repo.name }}"
@@ -59,6 +71,7 @@ restic check
 
 {% if repo.archive|default(false) %}
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
+{{ validate_mounts }}
 export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
 export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
 export RESTIC_REPOSITORY2="{{ repo['location'] }}"
@@ -71,6 +84,7 @@ if ([ -z "$(restic cat config)" ]) 2>/dev/null; then
 fi
 
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
+{{ validate_mounts }}
 export RESTIC_REPOSITORY2="{{ repo['archive_location'] }}"
 export RESTIC_PASSWORD2='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
@@ -82,6 +96,7 @@ restic copy
 {% if repo.archive_cleanup %}
 
 # ARCHIVE CLEANUP Settings for Server "{{ repo['name'] | string }}"
+{{ validate_mounts }}
 export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
 export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}'
 BACKUP_NAME="{{ repo.name }}_archive"
@@ -94,3 +109,7 @@ restic check
 
 {% endfor %}
 
+sync
+{% if restic_archiver__umount_after_usage %}
+umount restic_archiver__mount_disk
+{% restic_archiver__mount_disk %}

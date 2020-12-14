@@ -13,10 +13,14 @@ Of course you don't want to give access to others, so you solve the whole thing 
 
 As a bonus feature, you can optionally transfer the backups to another disk (even with a different password). Which is also a very charming backup concept from a security point of view.
 
+this role does not install restic. For that, we recommend [this ansible role](https://github.com/arillso/ansible.restic.git).
+We have had good experience with this role for the [restic rest server](https://github.com/donat-b/ansible-restic-rest.git).
+
  Variables:
 ---------
-```ini
-# which repos should we 'cleanup' by default
+```yml
+---
+# which repos should we cleanup by default
 restic_archiver__repos: {}
 #  - name: example_server:
 #    location: /srv/restic/example_server_repo
@@ -51,6 +55,17 @@ restic_archiver__group: 'root'
 # shedule restic cronjob
 restic_archiver__hour: '3'
 restic_archiver__minute: '32'
+
+# validate if disk is mounted
+restic_archiver__mount_required: false
+# which disk have to be mounted
+restic_archiver__mount_disk: '/mnt/'
+# umount after use?
+restic_archiver__umount_after_usage: false
+
+# required packages
+restic_archiver__package:
+  - cron
 
 # version check for this playbook (true is recomended)
 submodules_versioncheck: false

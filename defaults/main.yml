@@ -35,5 +35,16 @@ restic_archiver__group: 'root'
 restic_archiver__hour: '3'
 restic_archiver__minute: '32'
 
+# validate if disk is mounted
+restic_archiver__mount_required: false
+# which disk have to be mounted
+restic_archiver__mount_disk: '/mnt/'
+# umount after use?
+restic_archiver__umount_after_usage: false
+
+# required packages
+restic_archiver__package:
+  - cron
+
 # version check for this playbook (true is recomended)
 submodules_versioncheck: false

@@ -11,6 +11,12 @@
     mode: 0700
   become: true
 
+- name: install cron
+  become: true
+  package:
+    name: "{{ restic_archiver__package }}"
+    state: present
+
 - name: setup cronjob for restic
   become: true
   cron:
