@@ -8,8 +8,8 @@
 - name: setup cronjob for restic with logging
   become: true
   cron:
-    name: "archive restic backup with ansible_role_restic_archiver  >> /var/log/restic/restic_archiver.log"
-    job: /opt/restic-backup.sh
+    name: "archive restic backup with ansible_role_restic_archiver"
+    job: /opt/restic-backup.sh  >> /var/log/restic/restic_archiver.log
     cron_file: /etc/crontab
     hour: "{{ restic_archiver__hour }}"
     minute: "{{ restic_archiver__minute }}"
