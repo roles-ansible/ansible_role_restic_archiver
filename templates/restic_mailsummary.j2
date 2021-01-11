@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# This file is to cleanup your backup archive and move some snapshots to a external storage.
-echo "Summary for Restic Backup"
+# This file is designed to create a overview
+# overof the restic backup and
+# send it by mail - if wanted
+echo "SUMMARY for Restic BACKUP" > /tmp/mailcontent
+
 
 {% for repo in restic_archiver__repos %}
 
@@ -9,38 +12,53 @@ echo "Summary for Restic Backup"
 export RESTIC_REPOSITORY="{{ repo['location'] }}" 2>/dev/null
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}" 2>/dev/null
-echo "BACKUP: {{ repo.name }}"
-restic check 2>/dev/null
-restic stats 2>/dev/null
+{#
+
+  STARTING MAIL OUTPUT
+
+#}
+
+cat <<EOT >> /tmp/mailcontent
+
+
+
+{{ repo.name }}"
+$(restic check --quiet 2>/dev/null)
+  $(restic --quiet stats --json | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('Repo size: ', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB with ', str(jsondata['total_file_count']), ' Files.')")
+  Latest Snapshots:
+restic --quiet snapshots --last --json | jq -c '.[]' | while read i; do  echo -e "$i" | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('  Hostname: ', jsondata['hostname'], '  \tbackup time: ', jsondata['time'], '  \tPath: ', str(jsondata['paths'][0]))" ; done
+EOT
 
 {% if repo.archive|default(false) %}
 
 {% if restic_archiver__mount_required %}
-set +euxo pipefail 2>/dev/null
 if mountpoint -q {{ restic_archiver__mount_disk }}
 then
    echo "{{ restic_archiver__mount_disk }} is mounted"
 else
    mount -a 2>/dev/null
 fi
-set -euxo pipefail 2>/dev/null
 {% endif %}
 
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
-echo "EXTERNAL_BACKUP: {{ repo.name }}"
+echo "EXTERNAL_BACKUP: {{ repo.name }}" 2>/dev/null
 export RESTIC_REPOSITORY="{{ repo['archive_location'] }}" 2>/dev/null
 export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}_archive" 2>/dev/null
 
-restic check 2>/dev/null
-restic statps
+echo "  Backup at external Disk:" >> /tmp/mailcontent
+restic check --quiet >> /tmp/mailcontent
+restic --quiet stats --json  | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('  External Backup Repo size: ', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB with ', str(jsondata['total_file_count']), ' Files.')" >> /tmp/mailcontent
 {% endif %}
 
 {% endfor %}
 sync
-set +euxo pipefail
-echo "\n\n\n\n"
-df -h
+echo -e "\n\n\n\n\n\n\n -------------------------------------" >> /tmp/mailcontent
+df -h >> /tmp/mailcontent
+mail -s "restic backup report" {{ restic_archiver__mailaddress }} < /tmp/mailcontent
+
+
 {% if restic_archiver__umount_after_usage %}
 umount {{ restic_archiver__mount_disk }}
 {% endif %}
+

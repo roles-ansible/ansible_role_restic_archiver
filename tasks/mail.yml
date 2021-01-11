@@ -1,4 +1,12 @@
 ---
+- name: install requirements
+  become: true
+  package:
+    name:
+      - jq
+      - bsd-mailx
+    state: present
+
 - name: deploy restic template
   template:
     src: templates/restic_mailsummary.j2
