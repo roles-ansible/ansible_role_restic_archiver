@@ -26,7 +26,7 @@ cat <<EOT >> /tmp/mailcontent
 $(restic check --quiet 2>/dev/null)
   $(restic --quiet stats --json | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('Repo size: ', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB with ', str(jsondata['total_file_count']), ' Files.')")
   Latest Snapshots:
-restic --quiet snapshots --last --json | jq -c '.[]' | while read i; do  echo -e "$i" | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('  Hostname: ', jsondata['hostname'], '  \tbackup time: ', jsondata['time'], '  \tPath: ', str(jsondata['paths'][0]))" ; done
+$(restic --quiet snapshots --last --json | jq -c '.[]' | while read i; do  echo -e "$i" | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('  Hostname: ', jsondata['hostname'], '  \tbackup time: ', jsondata['time'], '  \tPath: ', str(jsondata['paths'][0]))" ; done)
 EOT
 
 {% if repo.archive|default(false) %}
