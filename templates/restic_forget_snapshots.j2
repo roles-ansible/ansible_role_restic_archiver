@@ -46,6 +46,14 @@
   --prune {% endif %}
 {%- endmacro %}
 
+{% if restic_archiver__mail_report | default(false) %}
+
+# collect info about last snapshot for mail report
+
+restic {{ restic_archiver__default_opt }} stats latest | grep Total
+
+{% endif %}
+
 {% if restic_archiver__mount_required %}
 if mountpoint -q {{ restic_archiver__mount_disk }}
 then
@@ -61,9 +69,9 @@ export RESTIC_REPOSITORY="{{ repo['location'] }}"
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}"
 
-restic forget {{ retention_pattern(repo) }}
+restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
 
-restic check
+restic {{ restic_archiver__default_opt }} check
 
 {% if repo.archive|default(false) %}
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
@@ -75,7 +83,7 @@ BACKUP_NAME="{{ repo.name }}_archive"
 
 # init repo if it does not exist
 if ([ -z "$(restic cat config)" ]) 2>/dev/null; then
-  restic init --copy-chunker-params
+  restic {{ restic_archiver__default_opt }} init --copy-chunker-params
 fi
 
 {% if restic_archiver__mount_required %}
@@ -95,7 +103,7 @@ export RESTIC_REPOSITORY="{{ repo['location'] }}"
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 
 # transfer snapshots to archive
-restic copy
+restic {{ restic_archiver__default_opt }} copy
 
 {% if repo.archive_cleanup %}
 
@@ -114,10 +122,10 @@ export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
 export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}_archive"
 
-restic forget {{ retention_pattern(repo) }}
+restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
 
 {% endif %}
-restic check
+restic {{ restic_archiver__default_opt }} check
 {% endif %}
 
 {% endfor %}

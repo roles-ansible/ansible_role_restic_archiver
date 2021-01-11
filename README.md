@@ -70,6 +70,9 @@ restic_archiver__package:
 restic_archiver__log_output: true
 restic_archiver__logrotate: true
 
+# restic default options
+restic_archiver__default_opt: ' --compact --quiet '
+
 # version check for this playbook (true is recomended)
 submodules_versioncheck: false
 ```
