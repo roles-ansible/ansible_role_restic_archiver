@@ -27,10 +27,10 @@
     user: "{{ restic_archiver__owner }}"
   when: not restic_archiver__log_output
 
-- name: setup cronjob for restic without logging
+- name: setup cronjob for restic mailsummary
   become: true
   cron:
-    name: "archive restic backup with ansible_role_restic_archiver"
+    name: "archive restic mailsumary"
     job: /opt/restic-mailsummary.sh
     cron_file: /etc/crontab
     hour: "7"

@@ -3,8 +3,16 @@
 # This file is designed to create a overview
 # overof the restic backup and
 # send it by mail - if wanted
-echo "SUMMARY for Restic BACKUP" > /tmp/mailcontent
+cat <<EOT > /tmp/mailcontent
+<!DOCTYPE html>
+<html>
+<head>
+<title>Restic summary</title>
+</head>
+<body>
+<h1>SUMMARY for Restic BACKUP</h1>
 
+EOT
 
 {% for repo in restic_archiver__repos %}
 
@@ -20,13 +28,31 @@ BACKUP_NAME="{{ repo.name }}" 2>/dev/null
 
 cat <<EOT >> /tmp/mailcontent
 
+<h2>{{ repo.name }}</h2>
 
-
-{{ repo.name }}"
 $(restic check --quiet 2>/dev/null)
-  $(restic --quiet stats --json | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('Repo size: ', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB with ', str(jsondata['total_file_count']), ' Files.')")
-  Latest Snapshots:
-$(restic --quiet snapshots --last --json | jq -c '.[]' | while read i; do  echo -e "$i" | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('  Hostname: ', jsondata['hostname'], '  \tbackup time: ', jsondata['time'], '  \tPath: ', str(jsondata['paths'][0]))" ; done)
+
+
+<h4>Latest Snapshots</h4>
+<table style="width:100%">
+<tr>
+  <th>Hostname</th>
+  <th>latest backup</th>
+  <th>Path</th>
+</tr>
+$(restic --quiet snapshots --last --json | jq -c '.[]' | while read i; do  echo -e "$i" | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<tr>\n<td>', jsondata['hostname'], '</td>\n<td>', jsondata['time'], '</td>\n<td>', str(jsondata['paths'][0]), '</td>\n</tr>\n')" ; done)
+</table>
+
+<table style="width:100%">
+<tr>
+  <th>name</th>
+  <th>total size</th>
+  <th>total files</th>
+</tr>
+<tr>
+<td>snapshots</td>
+$(restic --quiet stats --json | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<td>', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB </td>\n<td>', str(jsondata['total_file_count']), ' Files</td>')")
+</tr>
 EOT
 
 {% if repo.archive|default(false) %}
@@ -40,23 +66,33 @@ else
 fi
 {% endif %}
 
+
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
 echo "EXTERNAL_BACKUP: {{ repo.name }}" 2>/dev/null
 export RESTIC_REPOSITORY="{{ repo['archive_location'] }}" 2>/dev/null
 export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}_archive" 2>/dev/null
 
-echo "  Backup at external Disk:" >> /tmp/mailcontent
-restic check --quiet >> /tmp/mailcontent
-restic --quiet stats --json  | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('  External Backup Repo size: ', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB with ', str(jsondata['total_file_count']), ' Files.')" >> /tmp/mailcontent
+restic --quiet stats --json  | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<tr>\n<td>external archive</td>\n<td>', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB</td>\n<td> ', str(jsondata['total_file_count']), ' Files.</td>\n</tr>\n')" >> /tmp/mailcontent
 {% endif %}
+echo -e "</table>\n<br/><br/>" >> /tmp/mailcontent
+restic check --quiet >> /tmp/mailcontent
 
 {% endfor %}
 sync
-echo -e "\n\n\n\n\n\n\n -------------------------------------" >> /tmp/mailcontent
-df -h >> /tmp/mailcontent
-mail -s "restic backup report" {{ restic_archiver__mailaddress }} < /tmp/mailcontent
 
+cat <<EOT >> /tmp/mailcontent
+<br/><br/><br/>
+<br/><br/><br/>
+<br/><br/><br/>
+<code>
+$(df -h)
+</code>
+</body>
+</html>
+EOT
+
+mail -a "Content-type: text/html" -s "restic backup report" {{ restic_archiver__mailaddress }} < /tmp/mailcontent
 
 {% if restic_archiver__umount_after_usage %}
 umount {{ restic_archiver__mount_disk }}
