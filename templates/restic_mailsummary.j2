@@ -11,7 +11,7 @@ cat <<EOT > /tmp/mailcontent
 </head>
 <body>
 <h1>SUMMARY for Restic BACKUP</h1>
-
+{{ restic_archiver__additional_mail_msg | default ('') }}
 EOT
 
 {% for repo in restic_archiver__repos %}
@@ -86,7 +86,9 @@ cat <<EOT >> /tmp/mailcontent
 <br/><br/><br/>
 <br/><br/><br/>
 <code>
+<pre>
 $(df -h)
+</pre>
 </code>
 </body>
 </html>

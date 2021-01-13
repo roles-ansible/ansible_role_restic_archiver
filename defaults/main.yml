@@ -55,5 +55,7 @@ restic_archiver__mailaddress: 'root@localhost'
 # restic default options
 restic_archiver__default_opt: ''
 
+# additional msgs
+restic_archiver__additional_mail_msg: ''
 # version check for this playbook (true is recomended)
 submodules_versioncheck: false
