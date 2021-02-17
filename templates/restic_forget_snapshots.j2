@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
 # This file is to cleanup your backup archive and move some snapshots to a external storage.
+
+
+{% if restic_archiver__mail_report | default(false) %}
+# This file is also designed to create a overview
+# over the restic backup and
+# send it by mail - if wanted
+cat <<EOT > /tmp/mailcontent
+<!DOCTYPE html>
+<html>
+<head>
+<title>Restic summary</title>
+</head>
+<body>
+<h1>SUMMARY for Restic BACKUP</h1>
+{{ restic_archiver__additional_mail_msg | default ('') }}
+EOT
+{% endif %}
+
+
 {% for repo in restic_archiver__repos %}
 
 {#
@@ -71,7 +90,38 @@ BACKUP_NAME="{{ repo.name }}"
 
 restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
 
+{% if restic_archiver__mail_report | default(false) %}
+cat <<EOT >> /tmp/mailcontent
+
+<h2>{{ repo.name }}</h2>
+
+$(restic {{ restic_archiver__default_opt }} check --quiet 2>/dev/null)
+
+
+<h4>Latest Snapshots</h4>
+<table style="width:100%">
+<tr>
+  <th>Hostname</th>
+  <th>latest backup</th>
+  <th>Path</th>
+</tr>
+$(restic --quiet snapshots --last --json | jq -c '.[]' | while read i; do  echo -e "$i" | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<tr>\n<td>', jsondata['hostname'], '</td>\n<td>', jsondata['time'], '</td>\n<td>', str(jsondata['paths'][0]), '</td>\n</tr>\n')" ; done)
+</table>
+
+<table style="width:100%">
+<tr>
+  <th>name</th>
+  <th>total size</th>
+  <th>total files</th>
+</tr>
+<tr>
+<td>snapshots</td>
+$(restic --quiet stats --json | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<td>', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB </td>\n<td>', str(jsondata['total_file_count']), ' Files</td>')")
+</tr>
+EOT
+{% else %}
 restic {{ restic_archiver__default_opt }} check
+{% endif %}
 
 {% if repo.archive|default(false) %}
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
@@ -81,10 +131,6 @@ export RESTIC_REPOSITORY2="{{ repo['location'] }}"
 export RESTIC_PASSWORD2='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}_archive"
 
-# init repo if it does not exist
-if ([ -z "$(restic cat config)" ]) 2>/dev/null; then
-  restic {{ restic_archiver__default_opt }} init --copy-chunker-params
-fi
 
 {% if restic_archiver__mount_required %}
 set +euxo pipefail
@@ -96,6 +142,11 @@ else
 fi
 set -euxo pipefail
 {% endif %}
+
+# init repo if it does not exist
+if ([ -z "$(restic cat config)" ]) 2>/dev/null; then
+  restic {{ restic_archiver__default_opt }} init --copy-chunker-params
+fi
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
 export RESTIC_REPOSITORY2="{{ repo['archive_location'] }}"
 export RESTIC_PASSWORD2='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
@@ -125,13 +176,35 @@ BACKUP_NAME="{{ repo.name }}_archive"
 restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
 
 {% endif %}
-restic {{ restic_archiver__default_opt }} check
+{% if restic_archiver__mail_report | default(false) %}
+restic --quiet stats --json  | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<tr>\n<td>external_archive</td>\n<td>', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB</td>\n<td> ', str(jsondata['total_file_count']), ' Files.</td>\n</tr>\n')" >> /tmp/mailcontent
 {% endif %}
+echo -e "</table>\n<br/><br/>" >> /tmp/mailcontent
+restic {{ restic_archiver__default_opt }} check --quiet >> /tmp/mailcontent
+{% else %}
+restic {{ restic_archiver__default_opt }} check
 
+{% endif %}
 {% endfor %}
 
 sync
 set +euxo pipefail
+
+cat <<EOT >> /tmp/mailcontent
+<br/><br/><br/>
+<br/><br/><br/>
+<br/><br/><br/>
+<code>
+<pre>
+$(df -h)
+</pre>
+</code>
+</body>
+</html>
+EOT
+
+mail -a "Content-type: text/html" -s "restic backup report" {{ restic_archiver__mailaddress }} < /tmp/mailcontent
+
 {% if restic_archiver__umount_after_usage %}
 umount {{ restic_archiver__mount_disk }}
 {% endif %}

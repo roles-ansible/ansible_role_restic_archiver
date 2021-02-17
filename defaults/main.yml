@@ -20,11 +20,11 @@ restic_archiver__repos: {}
 #    keep_within: 1
 
 # how long should we store all backups by default
-restic_archiver__keep: 9
-restic_archiver__keep_hourly: 28
-restic_archiver__keep_daily: 26
+restic_archiver__keep: 5
+restic_archiver__keep_hourly: 16
+restic_archiver__keep_daily: 14
 restic_archiver__keep_weekly: 8
-restic_archiver__keep_monthly: 13
+restic_archiver__keep_monthly: 16
 restic_archiver__keep_yearly: 12
 
 # owner and user of all restic stuff

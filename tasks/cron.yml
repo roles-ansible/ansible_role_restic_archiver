@@ -26,14 +26,3 @@
     minute: "{{ restic_archiver__minute }}"
     user: "{{ restic_archiver__owner }}"
   when: not restic_archiver__log_output
-
-- name: setup cronjob for restic mailsummary
-  become: true
-  cron:
-    name: "archive restic mailsumary"
-    job: /opt/restic-mailsummary.sh
-    cron_file: /etc/crontab
-    hour: "7"
-    minute: "30"
-    user: "{{ restic_archiver__owner }}"
-  when: restic_archiver__mailsummary

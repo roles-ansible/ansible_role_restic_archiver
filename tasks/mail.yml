@@ -6,12 +6,4 @@
       - jq
       - bsd-mailx
     state: present
-
-- name: deploy restic template
-  template:
-    src: templates/restic_mailsummary.j2
-    dest: /opt/restic-mailsummary.sh
-    group: "{{ restic_archiver__owner }}"
-    owner: "{{ restic_archiver__group }}"
-    mode: 0700
-  become: true
+  when: restic_archiver__mailsummary | bool
