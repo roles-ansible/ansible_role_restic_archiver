@@ -37,4 +37,3 @@
     minute: "30"
     user: "{{ restic_archiver__owner }}"
   when: restic_archiver__mailsummary
-

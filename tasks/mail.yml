@@ -15,4 +15,3 @@
     owner: "{{ restic_archiver__group }}"
     mode: 0700
   become: true
-
