@@ -65,13 +65,20 @@ EOT
   --prune {% endif %}
 {%- endmacro %}
 
+{#
+
+START DUING STUFF INSIDE THE RESTIC REPO FOR LOOP
+
+#}
+
+{ # try
+
+
 {% if restic_archiver__mail_report | default(false) %}
-
 # collect info about last snapshot for mail report
-
 restic {{ restic_archiver__default_opt }} stats latest | grep Total
-
 {% endif %}
+
 
 {% if restic_archiver__mount_required %}
 if mountpoint -q {{ restic_archiver__mount_disk }}
@@ -81,13 +88,13 @@ else
    mount -a
 fi
 {% endif %}
-set -euxo pipefail
 
 # Settings for Server {{ repo['name'] | string }}
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}"
 
+echo "init $BACKUP_NAME"
 restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
 
 {% if restic_archiver__mail_report | default(false) %}
@@ -127,20 +134,16 @@ restic {{ restic_archiver__default_opt }} check
 # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
 export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
 export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
-export RESTIC_REPOSITORY2="{{ repo['location'] }}"
-export RESTIC_PASSWORD2='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}_archive"
 
-
+echo "init $BACKUP_NAME"
 {% if restic_archiver__mount_required %}
-set +euxo pipefail
 if mountpoint -q {{ restic_archiver__mount_disk }}
 then
    echo "{{ restic_archiver__mount_disk }} is mounted"
 else
    mount -a
 fi
-set -euxo pipefail
 {% endif %}
 
 # init repo if it does not exist
@@ -152,22 +155,20 @@ export RESTIC_REPOSITORY2="{{ repo['archive_location'] }}"
 export RESTIC_PASSWORD2='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
-
-# transfer snapshots to archive
-restic {{ restic_archiver__default_opt }} copy
-
-{% if repo.archive_cleanup %}
-
 {% if restic_archiver__mount_required %}
-set +euxo pipefail
 if mountpoint -q {{ restic_archiver__mount_disk }}
 then
    echo "{{ restic_archiver__mount_disk }} is mounted"
 else
    mount -a
 fi
-set -euxo pipefail
 {% endif %}
+
+# transfer snapshots to archive
+restic {{ restic_archiver__default_opt }} copy
+
+{% if repo.archive_cleanup %}
+
 # ARCHIVE CLEANUP Settings for Server "{{ repo['name'] | string }}"
 export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
 export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
@@ -185,10 +186,16 @@ restic {{ restic_archiver__default_opt }} check --quiet >> /tmp/mailcontent
 restic {{ restic_archiver__default_opt }} check
 
 {% endif %}
+
+} || { # catch
+echo -e "<h1>ALARM, ALRM</h1>\n<h2>SOMETING IN $RESTIC_REPOSITORY went wrong</h2>" >> /tmp/mailcontent
+awk 'NR==3{print "<h1>ALARM, ALRM</h1>\n<h2>SOMETING IN $RESTIC_REPOSITORY went wrong</h2>"}1' /tmp/mailcontent >> /tmp/mailcontentx
+mv /tmp/mailcontentx /tmp/mailcontent
+}
+
 {% endfor %}
 
 sync
-set +euxo pipefail
 
 cat <<EOT >> /tmp/mailcontent
 <br/><br/><br/>
