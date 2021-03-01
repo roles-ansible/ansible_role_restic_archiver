@@ -59,3 +59,6 @@ restic_archiver__default_opt: ''
 restic_archiver__additional_mail_msg: ''
 # version check for this playbook (true is recomended)
 submodules_versioncheck: false
+
+restic_archiver__cache_config: false
+restic_archiver__cache_dir: '~/.cache/restic'

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
 # This file is to cleanup your backup archive and move some snapshots to a external storage.
+{% if restic_archiver__cache_config | bool %}
+
+# define cache directory
+export XDG_CACHE_HOME={{ restic_archiver__cache_dir }}
+{% endif %}
+
 
 
 {% if restic_archiver__mail_report | default(false) %}
@@ -74,12 +80,6 @@ START DUING STUFF INSIDE THE RESTIC REPO FOR LOOP
 { # try
 
 
-{% if restic_archiver__mail_report | default(false) %}
-# collect info about last snapshot for mail report
-restic {{ restic_archiver__default_opt }} stats latest | grep Total
-{% endif %}
-
-
 {% if restic_archiver__mount_required %}
 if mountpoint -q {{ restic_archiver__mount_disk }}
 then
@@ -93,6 +93,12 @@ fi
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 BACKUP_NAME="{{ repo.name }}"
+
+{% if restic_archiver__mail_report | default(false) %}
+# collect info about last snapshot for mail report
+restic {{ restic_archiver__default_opt }} stats latest | grep Total
+{% endif %}
+
 
 echo "init $BACKUP_NAME"
 restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
