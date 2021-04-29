@@ -7,12 +7,17 @@
 export XDG_CACHE_HOME={{ restic_archiver__cache_dir }}
 {% endif %}
 
+{% if restic_archiver__mail_on_error | bool %}
+# Send a mail on error!
+restic_archiver__send_mail_on_error=false
+{% endif %}
 
 
 {% if restic_archiver__mail_report | default(false) %}
 # This file is also designed to create a overview
 # over the restic backup and
 # send it by mail - if wanted
+found_error=false
 cat <<EOT > /tmp/mailcontent
 <!DOCTYPE html>
 <html>
@@ -194,15 +199,20 @@ restic {{ restic_archiver__default_opt }} check
 {% endif %}
 
 } || { # catch
-echo -e "<h1>ALARM, ALRM</h1>\n<h2>SOMETING IN $RESTIC_REPOSITORY went wrong</h2>" >> /tmp/mailcontent
-awk 'NR==3{print "<h1>ALARM, ALRM</h1>\n<h2>SOMETING IN $RESTIC_REPOSITORY went wrong</h2>"}1' /tmp/mailcontent >> /tmp/mailcontentx
+echo -e "<h1>ALARM, ALARM</h1>\n<h2>SOMETING IN $RESTIC_REPOSITORY went wrong</h2>" >> /tmp/mailcontent
+awk 'NR==3{print "<h1>ALARM, ALARM</h1>\n<h2>SOMETING IN $RESTIC_REPOSITORY went wrong</h2>"}1' /tmp/mailcontent >> /tmp/mailcontentx
 mv /tmp/mailcontentx /tmp/mailcontent
+found_error=true
+{% if restic_archiver__mail_on_error | bool %}
+restic_archiver__send_mail_on_error=true
+{% endif %}
 }
 
 {% endfor %}
 
 sync
 
+{% if restic_archiver__mail_report | default(false) %}
 cat <<EOT >> /tmp/mailcontent
 <br/><br/><br/>
 <br/><br/><br/>
@@ -216,7 +226,15 @@ $(df -h)
 </html>
 EOT
 
+
 mail -a "Content-type: text/html" -s "restic backup report" {{ restic_archiver__mailaddress }} < /tmp/mailcontent
+{% endif %}
+
+{% if restic_archiver__mail_on_error | bool %}
+if [ "$restic_archiver__send_mail_on_error" == true ]; then
+mail -s "restic backup report" {{ restic_archiver__mailaddress }}  <<< 'Something went wrong while running restic backup archiver at {{ ansible_hostname }}'
+fi
+{% endif %}
 
 {% if restic_archiver__umount_after_usage %}
 umount {{ restic_archiver__mount_disk }}

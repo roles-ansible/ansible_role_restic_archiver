@@ -1,3 +1,3 @@
 ---
-playbook_version_number: 42  # should be int
+playbook_version_number: 43  # should be int
 playbook_version_path: 'role-restic_archiver_roles-ansible_github.com.version'

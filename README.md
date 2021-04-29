@@ -41,11 +41,11 @@ restic_archiver__repos: {}
 #    keep_within: 1
 
 # how long should we store all backups by default
-restic_archiver__keep: 9
-restic_archiver__keep_hourly: 28
-restic_archiver__keep_daily: 26
+restic_archiver__keep: 5
+restic_archiver__keep_hourly: 16
+restic_archiver__keep_daily: 14
 restic_archiver__keep_weekly: 8
-restic_archiver__keep_monthly: 13
+restic_archiver__keep_monthly: 16
 restic_archiver__keep_yearly: 12
 
 # owner and user of all restic stuff
@@ -67,13 +67,21 @@ restic_archiver__umount_after_usage: false
 restic_archiver__package:
   - cron
 
-restic_archiver__log_output: true
-restic_archiver__logrotate: true
+  restic_archiver__log_output: true
+  restic_archiver__logrotate: true
+
+  restic_archiver__mailsummary: false
+  restic_archiver__mail_on_error: false
+  restic_archiver__mailaddress: 'root@localhost'
 
 # restic default options
 restic_archiver__default_opt: ''
 
+# additional msgs
+restic_archiver__additional_mail_msg: ''
 # version check for this playbook (true is recomended)
 submodules_versioncheck: false
-```
 
+restic_archiver__cache_config: false
+restic_archiver__cache_dir: '~/.cache/restic'
+```
