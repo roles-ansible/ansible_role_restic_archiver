@@ -1,13 +1,13 @@
 ---
 - name: install cron
   become: true
-  package:
+  ansible.builtin.package:
     name: "{{ restic_archiver__package }}"
     state: present
 
 - name: setup cronjob for restic with logging
   become: true
-  cron:
+  ansible.builtin.cron:
     name: "archive restic backup with ansible_role_restic_archiver"
     job: /opt/restic-backup.sh  >> /var/log/restic/restic_archiver.log
     cron_file: /etc/crontab
@@ -18,7 +18,7 @@
 
 - name: setup cronjob for restic without logging
   become: true
-  cron:
+  ansible.builtin.cron:
     name: "archive restic backup with ansible_role_restic_archiver"
     job: /opt/restic-backup.sh
     cron_file: /etc/crontab

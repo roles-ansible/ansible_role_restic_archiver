@@ -1,7 +1,7 @@
 ---
 - name: create /var/log/restic/
   become: true
-  file:
+  ansible.builtin.file:
     path: /var/log/restic
     state: directory
     recurse: true
@@ -11,14 +11,14 @@
 
 - name: install logrotate
   become: true
-  package:
+  ansible.builtin.package:
     name: logrotate
     state: present
   when: restic_archiver__logrotate | bool
 
 - name: create logrotate config
   become: true
-  copy:
+  ansible.builtin.copy:
     src: files/logrotate.conf
     dest: /etc/logrotate.d/restic
     group: "{{ restic_archiver__owner }}"

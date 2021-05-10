@@ -1,9 +1,10 @@
 ---
-- include_tasks: versioncheck.yml
+- name: run optional versionscheck
+  ansible.builtin.include_tasks: versioncheck.yml
   when: submodules_versioncheck|bool
 
 - name: deploy restic template
-  template:
+  ansible.builtin.template:
     src: templates/restic_forget_snapshots.j2
     dest: /opt/restic-backup.sh
     group: "{{ restic_archiver__owner }}"
@@ -11,10 +12,14 @@
     mode: 0700
   become: true
 
-- include_tasks: logs.yml
+- name: setup logrotate
+  ansible.builtin.include_tasks: logs.yml
   when: restic_archiver__log_output | bool
 
-- include_tasks: cron.yml
+- name: create cronjob
+  ansible.builtin.include_tasks: cron.yml
+# todo: replace with systemd timer
 
-- include_tasks: mail.yml
+- name: install requirements for mailing
+  ansible.builtin.include_tasks: mail.yml
   when: restic_archiver__mailsummary | bool
