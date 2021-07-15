@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: restic
+  role_name: restic_archiver
   author: L3D
   namespace: do1jlr
   description: Role to deploy restic and setup backups.
