@@ -39,6 +39,7 @@ restic_archiver__repos: {}
 #    keep_monthly: 1
 #    keep_yearly: 1
 #    keep_within: 1
+#    prune: true
 
 # how long should we store all backups by default
 restic_archiver__keep: 5
@@ -84,4 +85,5 @@ submodules_versioncheck: false
 
 restic_archiver__cache_config: false
 restic_archiver__cache_dir: '~/.cache/restic'
+restic_archiver__prune: false
 ```

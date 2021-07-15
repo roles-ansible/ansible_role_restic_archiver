@@ -2,6 +2,7 @@
 galaxy_info:
   role_name: restic
   author: L3D
+  namespace: do1jlr
   description: Role to deploy restic and setup backups.
   license: MIT
   min_ansible_version: 2.11
