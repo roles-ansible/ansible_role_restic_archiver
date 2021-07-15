@@ -107,6 +107,11 @@ restic {{ restic_archiver__default_opt }} stats latest | grep Total
 
 echo "init $BACKUP_NAME"
 restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
+echo "restic forget done"
+{%- if repo.prune|default(restic_archiver__prune) %}
+restic {{ restic_archiver__default_opt }} prune
+echo "restic prune done"
+{% endif %}
 
 {% if restic_archiver__mail_report | default(false) %}
 cat <<EOT >> /tmp/mailcontent
@@ -186,6 +191,10 @@ export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\
 BACKUP_NAME="{{ repo.name }}_archive"
 
 restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
+{%- if repo.prune|default(restic_archiver__prune) %}
+restic {{ restic_archiver__default_opt }} prune
+echo "restic ARCHIVE prune done"
+{% endif %}
 
 {% endif %}
 {% if restic_archiver__mail_report | default(false) %}
