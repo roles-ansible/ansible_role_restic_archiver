@@ -8,8 +8,7 @@ galaxy_info:
   min_ansible_version: 2.11
   platforms:
     - name: Debian
-      versions:
-        - buster
+      versions: all
   galaxy_tags:
     - backup
     - archive

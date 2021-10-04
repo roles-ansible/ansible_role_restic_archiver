@@ -1,0 +1,6 @@
+if mountpoint -q {{ restic_archiver__mount_disk }}
+then
+   echo "{{ restic_archiver__mount_disk }} is mounted"
+else
+   mount -a
+fi
