@@ -1,0 +1,14 @@
+# This file is also designed to create a overview
+# over the restic backup and
+# send it by mail - if wanted
+found_error=false
+cat <<EOT > /tmp/mailcontent
+<!DOCTYPE html>
+<html>
+<head>
+<title>Restic summary</title>
+</head>
+<body>
+<h1>SUMMARY for Restic BACKUP</h1>
+{{ restic_archiver__additional_mail_msg | default ('') }}
+EOT

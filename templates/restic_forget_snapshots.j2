@@ -1,38 +1,20 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
 # This file is to cleanup your backup archive and move some snapshots to a external storage.
-{% if restic_archiver__cache_config | bool %}
 
-# define cache directory
-export XDG_CACHE_HOME={{ restic_archiver__cache_dir }}
+{% if restic_archiver__cache_config | bool %}
+  {% incluede 'includes/restic_cache.sh.j2' %}
 {% endif %}
 
 {% if restic_archiver__mail_on_error | bool %}
-# Send a mail on error!
-restic_archiver__send_mail_on_error=false
+  {% incluede 'includes/set_send_mail_on_error_variable.sh.j2' %}
 {% endif %}
-
 
 {% if restic_archiver__mail_report | default(false) %}
-# This file is also designed to create a overview
-# over the restic backup and
-# send it by mail - if wanted
-found_error=false
-cat <<EOT > /tmp/mailcontent
-<!DOCTYPE html>
-<html>
-<head>
-<title>Restic summary</title>
-</head>
-<body>
-<h1>SUMMARY for Restic BACKUP</h1>
-{{ restic_archiver__additional_mail_msg | default ('') }}
-EOT
+  {% incluede 'includes/mail_report_header.sh.j2' %}
 {% endif %}
 
-
 {% for repo in restic_archiver__repos %}
-
 {#
   define macro:
   how fast should we delete snapshots?
@@ -77,21 +59,14 @@ EOT
 {%- endmacro %}
 
 {#
-
-START DUING STUFF INSIDE THE RESTIC REPO FOR LOOP
-
+START DOING STUFF INSIDE THE RESTIC REPO FOR LOOP
 #}
 
 { # try
 
 
 {% if restic_archiver__mount_required %}
-if mountpoint -q {{ restic_archiver__mount_disk }}
-then
-   echo "{{ restic_archiver__mount_disk }} is mounted"
-else
-   mount -a
-fi
+  {% incluede 'includes/mounting.sh.j2' %}
 {% endif %}
 
 # Settings for Server {{ repo['name'] | string }}
@@ -128,7 +103,7 @@ $(restic {{ restic_archiver__default_opt }} check --quiet 2>/dev/null)
   <th>latest backup</th>
   <th>Path</th>
 </tr>
-$(restic --quiet snapshots --last --json | jq -c '.[]' | while read i; do  echo -e "$i" | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<tr>\n<td>', jsondata['hostname'], '</td>\n<td>', jsondata['time'], '</td>\n<td>', str(jsondata['paths'][0]), '</td>\n</tr>\n')" ; done)
+$(restic --quiet snapshots --latest 1 --json | jq -c '.[]' | while read i; do  echo -e "$i" | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<tr>\n<td>', jsondata['hostname'], '</td>\n<td>', jsondata['time'], '</td>\n<td>', str(jsondata['paths'][0]), '</td>\n</tr>\n')" ; done)
 </table>
 
 <table style="width:100%">
@@ -154,11 +129,7 @@ BACKUP_NAME="{{ repo.name }}_archive"
 
 echo "init $BACKUP_NAME"
 {% if restic_archiver__mount_required %}
-if mountpoint -q {{ restic_archiver__mount_disk }}
-then
-   echo "{{ restic_archiver__mount_disk }} is mounted"
-else
-   mount -a
+  {% incluede 'includes/mounting.sh.j2' %}
 fi
 {% endif %}
 
@@ -172,12 +143,7 @@ export RESTIC_PASSWORD2='{{ repo['archive_password'] | regex_replace('\'', '\'\\
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 {% if restic_archiver__mount_required %}
-if mountpoint -q {{ restic_archiver__mount_disk }}
-then
-   echo "{{ restic_archiver__mount_disk }} is mounted"
-else
-   mount -a
-fi
+  {% incluede 'includes/mounting.sh.j2' %}
 {% endif %}
 
 # transfer snapshots to archive
@@ -241,7 +207,7 @@ mail -a "Content-type: text/html" -s "restic backup report" {{ restic_archiver__
 
 {% if restic_archiver__mail_on_error | bool %}
 if [ "$restic_archiver__send_mail_on_error" == true ]; then
-mail -s "restic backup report" {{ restic_archiver__mailaddress }}  <<< 'Something went wrong while running restic backup archiver at {{ ansible_hostname }}'
+mail -s "[ERROR] restic backup report" {{ restic_archiver__mailaddress }}  <<< 'Something went wrong while running restic backup archiver at {{ ansible_hostname }}'
 fi
 {% endif %}
 
