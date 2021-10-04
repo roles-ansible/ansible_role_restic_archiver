@@ -3,15 +3,15 @@
 # This file is to cleanup your backup archive and move some snapshots to a external storage.
 
 {% if restic_archiver__cache_config | bool %}
-  {% incluede 'includes/restic_cache.sh.j2' %}
+  {% include 'includes/restic_cache.sh.j2' %}
 {% endif %}
 
 {% if restic_archiver__mail_on_error | bool %}
-  {% incluede 'includes/set_send_mail_on_error_variable.sh.j2' %}
+  {% include 'includes/set_send_mail_on_error_variable.sh.j2' %}
 {% endif %}
 
 {% if restic_archiver__mail_report | default(false) %}
-  {% incluede 'includes/mail_report_header.sh.j2' %}
+  {% include 'includes/mail_report_header.sh.j2' %}
 {% endif %}
 
 {% for repo in restic_archiver__repos %}
@@ -66,7 +66,7 @@ START DOING STUFF INSIDE THE RESTIC REPO FOR LOOP
 
 
 {% if restic_archiver__mount_required %}
-  {% incluede 'includes/mounting.sh.j2' %}
+  {% include 'includes/mounting.sh.j2' %}
 {% endif %}
 
 # Settings for Server {{ repo['name'] | string }}
@@ -129,7 +129,7 @@ BACKUP_NAME="{{ repo.name }}_archive"
 
 echo "init $BACKUP_NAME"
 {% if restic_archiver__mount_required %}
-  {% incluede 'includes/mounting.sh.j2' %}
+  {% include 'includes/mounting.sh.j2' %}
 fi
 {% endif %}
 
@@ -143,7 +143,7 @@ export RESTIC_PASSWORD2='{{ repo['archive_password'] | regex_replace('\'', '\'\\
 export RESTIC_REPOSITORY="{{ repo['location'] }}"
 export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
 {% if restic_archiver__mount_required %}
-  {% incluede 'includes/mounting.sh.j2' %}
+  {% include 'includes/mounting.sh.j2' %}
 {% endif %}
 
 # transfer snapshots to archive
