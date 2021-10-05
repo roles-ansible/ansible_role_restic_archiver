@@ -1,0 +1,167 @@
+{#
+  define macro:
+  how fast should we delete snapshots?
+
+  Variables are defined via defaults!
+#}
+{% macro retention_pattern(repo) -%}
+  {% if repo.keep_last is defined and repo.keep_last != None -%}
+      --keep-last {{ repo.keep_last }}
+    {%- else -%}
+      --keep-last {{ restic_archiver__keep }}
+    {%- endif %} \
+  {% if repo.keep_hourly is defined and repo.keep_hourly != None -%}
+      --keep-hourly {{ repo.keep_hourly }}
+    {%- else -%}
+      --keep-hourly {{ restic_archiver__keep_hourly }}
+    {%- endif %} \
+  {% if repo.keep_daily is defined and repo.keep_daily != None -%}
+      --keep-daily {{ repo.keep_daily }}
+    {%- else -%}
+      --keep-daily {{ restic_archiver__keep_daily }}
+    {%- endif %} \
+  {% if repo.keep_weekly is defined and repo.keep_weekly != None -%}
+      --keep-weekly {{ repo.keep_weekly }}
+    {%- else -%}
+      --keep-weekly {{ restic_archiver__keep_weekly }}
+    {%- endif %} \
+  {% if repo.keep_monthly is defined and repo.keep_monthly != None -%}
+      --keep-monthly {{ repo.keep_monthly }}
+    {%- else -%}
+      --keep-monthly {{ restic_archiver__keep_monthly }}
+      {%- endif %} \
+  {% if repo.keep_yearly is defined and repo.keep_yearly != None -%}
+      --keep-yearly {{ repo.keep_yearly }}
+    {%- else -%}
+      --keep-yearly {{ restic_archiver__keep_yearly }}
+    {%- endif -%}
+  {% if repo.keep_within is defined and repo.keep_within != None %} \
+    --keep-within {{ repo.keep_within }} {% endif -%}
+  {%- if repo.prune|default(restic_archiver__prune) %} \
+  --prune {% endif %}
+{%- endmacro %}
+
+{#
+START DOING STUFF INSIDE THE RESTIC REPO FOR LOOP
+#}
+
+{ # try
+
+  {% if restic_archiver__mount_required %}
+    {% include 'includes/mounting.sh.j2' %}
+  {% endif %}
+
+  # Settings for Server {{ repo['name'] | string }}
+  export RESTIC_REPOSITORY="{{ repo['location'] }}"
+  export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
+  BACKUP_NAME="{{ repo.name }}"
+
+  {% if restic_archiver__mail_report | default(false) %}
+  # collect info about last snapshot for mail report
+  restic {{ restic_archiver__default_opt }} stats latest | grep Total
+  {% endif %}
+
+
+  echo "init $BACKUP_NAME"
+  restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
+  echo "restic forget done"
+  {%- if repo.prune|default(restic_archiver__prune) %}
+  restic {{ restic_archiver__default_opt }} prune
+  echo "restic prune done"
+  {% endif %}
+
+  {% if restic_archiver__mail_report | default(false) %}
+  cat <<EOT >> /tmp/mailcontent
+
+<h2>{{ repo.name }}</h2>
+
+$(restic {{ restic_archiver__default_opt }} check --quiet 2>/dev/null)
+
+
+<h4>Latest Snapshots</h4>
+<table style="width:100%">
+<tr>
+  <th>Hostname</th>
+  <th>latest backup</th>
+  <th>Path</th>
+</tr>
+$(restic --quiet snapshots --latest 1 --json | jq -c '.[]' | while read i; do  echo -e "$i" | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<tr>\n<td>', jsondata['hostname'], '</td>\n<td>', jsondata['time'], '</td>\n<td>', str(jsondata['paths'][0]), '</td>\n</tr>\n')" ; done)
+</table>
+
+<table style="width:100%">
+<tr>
+  <th>name</th>
+  <th>total size</th>
+  <th>total files</th>
+</tr>
+<tr>
+<td>snapshots</td>
+$(restic --quiet stats --json | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<td>', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB </td>\n<td>', str(jsondata['total_file_count']), ' Files</td>')")
+</tr>
+EOT
+  {% else %}
+  restic {{ restic_archiver__default_opt }} check
+  {% endif %}
+
+  {% if repo.archive|default(false) %}
+  # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
+  export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
+  export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
+  BACKUP_NAME="{{ repo.name }}_archive"
+
+  echo "init $BACKUP_NAME"
+  {% if restic_archiver__mount_required %}
+    {% include 'includes/mounting.sh.j2' %}
+  {% endif %}
+
+  # init repo if it does not exist
+  if ([ -z "$(restic cat config)" ]) 2>/dev/null; then
+    restic {{ restic_archiver__default_opt }} init --copy-chunker-params
+  fi
+  # ARCHIVE Settings for Server "{{ repo['name'] | string }}"
+  export RESTIC_REPOSITORY2="{{ repo['archive_location'] }}"
+  export RESTIC_PASSWORD2='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
+  export RESTIC_REPOSITORY="{{ repo['location'] }}"
+  export RESTIC_PASSWORD='{{ repo['password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
+  {% if restic_archiver__mount_required %}
+    {% include 'includes/mounting.sh.j2' %}
+  {% endif %}
+
+  # transfer snapshots to archive
+  restic {{ restic_archiver__default_opt }} copy
+
+  {% if repo.archive_cleanup %}
+
+  # ARCHIVE CLEANUP Settings for Server "{{ repo['name'] | string }}"
+  export RESTIC_REPOSITORY="{{ repo['archive_location'] }}"
+  export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
+  BACKUP_NAME="{{ repo.name }}_archive"
+
+  restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
+  {%- if repo.prune|default(restic_archiver__prune) %}
+  restic {{ restic_archiver__default_opt }} prune
+  echo "restic ARCHIVE prune done"
+  {% endif %}
+
+  {% endif %}
+  {% if restic_archiver__mail_report | default(false) %}
+  restic --quiet stats --json  | python3 -c "import sys, json; jsondata=json.load(sys.stdin); print('<tr>\n<td>external_archive</td>\n<td>', str(int(jsondata['total_size'] / 1024 / 1024 / 1024 * 1000 )/1000 ), 'GB</td>\n<td> ', str(jsondata['total_file_count']), ' Files.</td>\n</tr>\n')" >> /tmp/mailcontent
+  {% endif %}
+  echo -e "</table>\n<br/><br/>" >> /tmp/mailcontent
+  restic {{ restic_archiver__default_opt }} check --quiet >> /tmp/mailcontent
+  {% else %}
+  restic {{ restic_archiver__default_opt }} check
+
+  {% endif %}
+
+} || { # catch
+echo -e "<h1>ALARM, ALARM</h1>\n<h2>SOMETING IN $RESTIC_REPOSITORY went wrong</h2>" >> /tmp/mailcontent
+awk 'NR==3{print "<h1>ALARM, ALARM</h1>\n<h2>SOMETING IN $RESTIC_REPOSITORY went wrong</h2>"}1' /tmp/mailcontent >> /tmp/mailcontentx
+mv /tmp/mailcontentx /tmp/mailcontent
+found_error=true
+{% if restic_archiver__mail_on_error | bool %}
+restic_archiver__send_mail_on_error=true
+{% endif %}
+}
+
+
