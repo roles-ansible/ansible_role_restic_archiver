@@ -1,0 +1,15 @@
+cat <<EOT >> /tmp/mailcontent
+<br/><br/><br/>
+<br/><br/><br/>
+<br/><br/><br/>
+<code>
+<pre>
+$(df -h)
+</pre>
+</code>
+</body>
+</html>
+EOT
+
+
+mail -a "Content-type: text/html" -s "restic backup report" {{ restic_archiver__mailaddress }} < /tmp/mailcontent
