@@ -1,0 +1,10 @@
+[Unit]
+Description=Systemd Timer to run the Restic archiver from /opt/restic-backup.sh
+
+[Timer]
+OnCalendar={{ restic_archiver__oncalendar | default('*-*-* 04:23:00') }}
+RandomizedDelaySec={{ restic_archiver__randomizeddelaysec }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target

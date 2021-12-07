@@ -18,7 +18,11 @@
 
 - name: create cronjob
   ansible.builtin.include_tasks: cron.yml
-# todo: replace with systemd timer
+  when: not restic_archiver__use_systemd_timer | bool
+
+- name: create systemd timer
+  ansible.builtin.include_tasks: systemd.yml
+  when: restic_archiver__use_systemd_timer | bool
 
 - name: install requirements for mailing
   ansible.builtin.include_tasks: mail.yml
