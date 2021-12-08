@@ -1,0 +1,24 @@
+---
+- name: create restic-archiver.service
+  become: true
+  ansible.builtin.template:
+    src: templates/restic-archiver.service.j2
+    dest: /lib/systemd/system/restic-archiver.service
+    mode: 0644
+    owner: root
+    group: root
+  notify:
+    - systemctl daemon-reload
+    - systemctl enable restic-archiver.service
+
+- name: create restic-archiver.timer
+  become: true
+  ansible.builtin.template:
+    src: templates/restic-archiver.timer.j2
+    dest: /lib/systemd/system/restic-archiver.timer
+    mode: 0644
+    owner: root
+    group: root
+  notify:
+    - systemctl daemon-reload
+    - systemctl start restic-archiver.timer

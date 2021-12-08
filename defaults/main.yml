@@ -33,8 +33,10 @@ restic_archiver__owner: 'root'
 restic_archiver__group: 'root'
 
 # shedule restic cronjob
-restic_archiver__hour: '3'
-restic_archiver__minute: '32'
+restic_archiver__hour: '4'
+restic_archiver__minute: '23'
+restic_archiver__oncalendar: '*-*-* 04:23:00'
+restic_archiver__randomizeddelaysec: '900'
 
 # validate if disk is mounted
 restic_archiver__mount_required: false
@@ -66,3 +68,5 @@ restic_archiver__cache_config: false
 restic_archiver__cache_dir: '~/.cache/restic'
 
 restic_archiver__prune: false
+
+restic_archiver__use_systemd_timer: true

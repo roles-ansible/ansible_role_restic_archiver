@@ -5,12 +5,18 @@
     name: "{{ restic_archiver__package }}"
     state: present
 
+- name: migrate cronjob to cron.d directory
+  become: true
+  ansible.builtin.cron:
+    name: "archive restic backup with ansible_role_restic_archiver"
+    state: absent
+
 - name: setup cronjob for restic with logging
   become: true
   ansible.builtin.cron:
     name: "archive restic backup with ansible_role_restic_archiver"
     job: /opt/restic-backup.sh  >> /var/log/restic/restic_archiver.log
-    cron_file: /etc/crontab
+    cron_file: restic_archiver
     hour: "{{ restic_archiver__hour }}"
     minute: "{{ restic_archiver__minute }}"
     user: "{{ restic_archiver__owner }}"
@@ -21,7 +27,7 @@
   ansible.builtin.cron:
     name: "archive restic backup with ansible_role_restic_archiver"
     job: /opt/restic-backup.sh
-    cron_file: /etc/crontab
+    cron_file: restic_archiver
     hour: "{{ restic_archiver__hour }}"
     minute: "{{ restic_archiver__minute }}"
     user: "{{ restic_archiver__owner }}"
