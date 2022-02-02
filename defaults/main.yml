@@ -28,6 +28,14 @@ restic_archiver__keep_weekly: 8
 restic_archiver__keep_monthly: 16
 restic_archiver__keep_yearly: 12
 
+restic_archiver__archive_keep: 5
+restic_archiver__archive_keep_hourly: 16
+restic_archiver__archive_keep_daily: 14
+restic_archiver__archive_keep_weekly: 8
+restic_archiver__archive_keep_monthly: 16
+restic_archiver__archive_keep_yearly: 12
+
+
 # owner and user of all restic stuff
 restic_archiver__owner: 'root'
 restic_archiver__group: 'root'

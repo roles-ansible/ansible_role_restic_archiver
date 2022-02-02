@@ -41,6 +41,44 @@
   --prune {% endif %}
 {%- endmacro %}
 
+{% macro retention_archive_pattern(repo) -%}
+  {% if repo.keep_last is defined and repo.archive_keep_last != None -%}
+      --keep-last {{ repo.archive_keep_last }}
+    {%- else -%}
+      --keep-last {{ restic_archiver__archive_keep }}
+    {%- endif %} \
+  {% if repo.keep_hourly is defined and repo.archive_keep_hourly != None -%}
+      --keep-hourly {{ repo.archive_keep_hourly }}
+    {%- else -%}
+      --keep-hourly {{ restic_archiver__archive_keep_hourly }}
+    {%- endif %} \
+  {% if repo.keep_daily is defined and repo.archive_keep_daily != None -%}
+      --keep-daily {{ repo.archive_keep_daily }}
+    {%- else -%}
+      --keep-daily {{ restic_archiver__archive_keep_daily }}
+    {%- endif %} \
+  {% if repo.keep_weekly is defined and repo.archive_keep_weekly != None -%}
+      --keep-weekly {{ repo.archive_keep_weekly }}
+    {%- else -%}
+      --keep-weekly {{ restic_archiver__archive_keep_weekly }}
+    {%- endif %} \
+  {% if repo.keep_monthly is defined and repo.archive_keep_monthly != None -%}
+      --keep-monthly {{ repo.archive_keep_monthly }}
+    {%- else -%}
+      --keep-monthly {{ restic_archiver__archive_keep_monthly }}
+      {%- endif %} \
+  {% if repo.keep_yearly is defined and repo.archive_keep_yearly != None -%}
+      --keep-yearly {{ repo.archive_keep_yearly }}
+    {%- else -%}
+      --keep-yearly {{ restic_archiver__archive_keep_yearly }}
+    {%- endif -%}
+  {% if repo.keep_within is defined and repo.archive_keep_within != None %} \
+    --keep-within {{ repo.archive_keep_within }} {% endif -%}
+  {%- if repo.prune|default(restic_archiver__prune) %} \
+  --prune {% endif %}
+{%- endmacro %}
+
+
 {#
 START DOING STUFF INSIDE THE RESTIC REPO FOR LOOP
 #}
@@ -137,7 +175,7 @@ EOT
   export RESTIC_PASSWORD='{{ repo['archive_password'] | regex_replace('\'', '\'\\\'\'') }}' 2>/dev/null
   BACKUP_NAME="{{ repo.name }}_archive"
 
-  restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
+  restic {{ restic_archiver__default_opt }} forget {{ retention_archive_pattern(repo) }}
   {%- if repo.prune|default(restic_archiver__prune) %}
   restic {{ restic_archiver__default_opt }} prune
   echo "restic ARCHIVE prune done"
