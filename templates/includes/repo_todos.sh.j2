@@ -103,7 +103,7 @@ START DOING STUFF INSIDE THE RESTIC REPO FOR LOOP
   echo "init $BACKUP_NAME"
   restic {{ restic_archiver__default_opt }} forget {{ retention_pattern(repo) }}
   echo "restic forget done"
-  {%- if repo.prune|default(restic_archiver__prune) %}
+  {% if repo.prune|default(restic_archiver__prune) %}
   restic {{ restic_archiver__default_opt }} prune
   echo "restic prune done"
   {% endif %}
@@ -176,7 +176,7 @@ EOT
   BACKUP_NAME="{{ repo.name }}_archive"
 
   restic {{ restic_archiver__default_opt }} forget {{ retention_archive_pattern(repo) }}
-  {%- if repo.prune|default(restic_archiver__prune) %}
+  {% if repo.prune|default(restic_archiver__prune) %}
   restic {{ restic_archiver__default_opt }} prune
   echo "restic ARCHIVE prune done"
   {% endif %}
