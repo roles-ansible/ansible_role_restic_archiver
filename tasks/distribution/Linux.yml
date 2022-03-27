@@ -2,13 +2,13 @@
 # tasks file for skeleton
 
 - name: reformat dict if necessary
-  set_fact:
+  ansible.builtin.set_fact:
     restic_archiver__backups: "{{ restic_archiver__backups|dict2items|json_query('[*].value') }}"
   when:
     - restic_archiver__backups | type_debug == "dict"
 
 - name: Create backup credentials
-  template:
+  ansible.builtin.template:
     src: restic_access_Linux.j2
     dest: '{{ restic_script_dir }}/access-{{ item.name }}.sh'
     mode: '0700'
@@ -23,7 +23,7 @@
     - item.repo in restic_repos
 
 - name: Create backup script
-  template:
+  ansible.builtin.template:
     src: restic_script_Linux.j2
     dest: '{{ restic_script_dir }}/backup-{{ item.name }}.sh'
     mode: '0700'
@@ -38,7 +38,7 @@
     - item.repo in restic_repos
 
 - name: Setup CRON jobs
-  cron:
+  ansible.builtin.cron:
     name: 'do1jlr.restic_archiver {{ item.name }}'
     job: 'CRON=true {{ restic_script_dir }}/backup-{{ item.name }}.sh'
     minute: '{{ item.schedule_minute | default("*") }}'

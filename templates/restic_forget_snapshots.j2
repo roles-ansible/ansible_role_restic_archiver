@@ -2,6 +2,21 @@
 # {{ ansible_managed }}
 # This file is to cleanup your backup archive and move some snapshots to a external storage.
 
+pid="/var/run/restic_archiver.pid"
+trap "rm -f $pid" SIGSEGV
+trap "rm -f $pid" SIGINT
+
+if [ -e $pid ]; then
+{% if restic_archiver__mail_on_error | bool %}
+    mail -s "[ERROR] running restic backup" {{ restic_archiver__mailaddress }}  <<< 'Another instance of our huge backup script is already running. We canceled running it twice at {{ ansible_hostname }}'
+{% endif %}
+    echo "Another version of this script is already running. CANCELING"
+    exit # pid file exists, another instance is running, so now we politely exit
+else
+    echo $$ > $pid # pid file doesn't exit, create one and go on
+fi
+
+
 {% if restic_archiver__cache_config | bool %}
   {% include 'includes/restic_cache.sh.j2' %}
 {% endif %}
@@ -33,4 +48,7 @@ sync
 {% if restic_archiver__umount_after_usage %}
   umount {{ restic_archiver__mount_disk }}
 {% endif %}
+
+rm -f $pid # remove pid file just before exiting
 echo "restic archiver done"
+exit
