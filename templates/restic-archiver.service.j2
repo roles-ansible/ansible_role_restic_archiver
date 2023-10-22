@@ -6,6 +6,6 @@ Documentation=https://github.com/roles-ansible/ansible_role_restic_archiver.git
 Type=oneshot
 ExecStart=/opt/restic-backup.sh
 TimeoutStartSec=0
-{% if restic_archiver__log_output -%}
+{% if restic_archiver__log_output %}
 StandardOutput=append:/var/log/restic/restic_archiver.log
-{%- endif -%}
+{% endif %}
