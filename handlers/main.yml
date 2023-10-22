@@ -1,17 +1,17 @@
 ---
-- name: systemctl daemon-reload
+- name: Run systemctl daemon-reload
   become: true
   ansible.builtin.systemd:
     daemon_reload: true
 
-- name: systemctl start restic-archiver.timer
+- name: Run systemctl start restic-archiver.timer
   become: true
   ansible.builtin.systemd:
     name: restic-archiver.timer
     enabled: true
     state: started
 
-- name: systemctl enable restic-archiver.service
+- name: Run systemctl enable restic-archiver.service
   become: true
   ansible.builtin.systemd:
     name: restic-archiver.service

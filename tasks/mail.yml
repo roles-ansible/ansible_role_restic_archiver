@@ -1,5 +1,5 @@
 ---
-- name: install requirements
+- name: Install requirements
   become: true
   ansible.builtin.package:
     name:

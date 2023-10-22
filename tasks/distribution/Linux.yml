@@ -1,9 +1,7 @@
 ---
-# tasks file for skeleton
-
-- name: reformat dict if necessary
+- name: Reformat dict if necessary
   ansible.builtin.set_fact:
-    restic_archiver__backups: "{{ restic_archiver__backups|dict2items|json_query('[*].value') }}"
+    restic_archiver__backups: "{{ restic_archiver__backups | dict2items | json_query('[*].value') }}"
   when:
     - restic_archiver__backups | type_debug == "dict"
 

@@ -1,17 +1,17 @@
 ---
-- name: install cron
+- name: Install cron
   become: true
   ansible.builtin.package:
     name: "{{ restic_archiver__package }}"
     state: present
 
-- name: migrate cronjob to cron.d directory
+- name: Migrate cronjob to cron.d directory
   become: true
   ansible.builtin.cron:
     name: "archive restic backup with ansible_role_restic_archiver"
     state: absent
 
-- name: setup cronjob for restic with logging
+- name: Setup cronjob for restic with logging
   become: true
   ansible.builtin.cron:
     name: "archive restic backup with ansible_role_restic_archiver"
@@ -22,7 +22,7 @@
     user: "{{ restic_archiver__owner }}"
   when: restic_archiver__log_output
 
-- name: setup cronjob for restic without logging
+- name: Setup cronjob for restic without logging
   become: true
   ansible.builtin.cron:
     name: "archive restic backup with ansible_role_restic_archiver"

@@ -18,25 +18,25 @@ fi
 
 
 {% if restic_archiver__cache_config | bool %}
-  {% include 'includes/restic_cache.sh.j2' %}
+{%     include 'includes/restic_cache.sh.j2' %}
 {% endif %}
 
 {% if restic_archiver__mail_on_error | bool %}
-  {% include 'includes/set_send_mail_on_error_variable.sh.j2' %}
+{%     include 'includes/set_send_mail_on_error_variable.sh.j2' %}
 {% endif %}
 
 {% if restic_archiver__mail_report | default(false) %}
-  {% include 'includes/mail_report_header.sh.j2' %}
+{%     include 'includes/mail_report_header.sh.j2' %}
 {% endif %}
 
 {% for repo in restic_archiver__repos %}
-  {% include 'includes/repo_todos.sh.j2' %}
+{%     include 'includes/repo_todos.sh.j2' %}
 {% endfor %}
 
 sync
 
 {% if restic_archiver__mail_report | default(false) %}
-  {% include 'includes/mail_report_trailer.sh.j2' %}
+{%     include 'includes/mail_report_trailer.sh.j2' %}
 {% endif %}
 
 {% if restic_archiver__mail_on_error | bool %}
